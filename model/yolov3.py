@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch
 from model.backbones.darknet53 import Darknet53
 from model.necks.yolo_fpn import FPN_YOLOV3
+from model.necks.yolov4_neck import yolov4neck
 from model.head.yolo_head import Yolo_head
 from model.layers.conv_module import Convolutional
 import config.yolov3_config_voc as cfg
@@ -21,17 +22,21 @@ class Yolov3(nn.Module):
     """
     Note ： int the __init__(), to define the modules should be in order, because of the weight file is order
     """
-    def __init__(self, init_weights=True):
+    def __init__(self, init_weights=True, inference=False):
         super(Yolov3, self).__init__()
 
         self.__anchors = torch.FloatTensor(cfg.MODEL["ANCHORS"])
         self.__strides = torch.FloatTensor(cfg.MODEL["STRIDES"])
         self.__nC = cfg.DATA["NUM"]
         self.__out_channel = cfg.MODEL["ANCHORS_PER_SCLAE"] * (self.__nC + 5)
+        self.__neck_v4 = cfg.MODEL["NECK_VERSION_V4"]
 
         self.__backnone = Darknet53()
-        self.__fpn = FPN_YOLOV3(fileters_in=[1024, 512, 256],
-                                fileters_out=[self.__out_channel, self.__out_channel, self.__out_channel])
+        if not self.__neck_v4:
+           self.__fpn = FPN_YOLOV3(fileters_in=[1024, 512, 256],
+                                   fileters_out=[self.__out_channel, self.__out_channel, self.__out_channel])
+        else:
+           self.__fpn = yolov4neck(inference)
 
         # small
         self.__head_s = Yolo_head(nC=self.__nC, anchors=self.__anchors[0], stride=self.__strides[0])
