@@ -1,3 +1,8 @@
+'''
+The code in this file is from https://github.com/Tianxiaomo/pytorch-YOLOv4/blob/master/models.py
+'''
+
+
 import torch
 from torch import nn
 import torch.nn.functional as F
