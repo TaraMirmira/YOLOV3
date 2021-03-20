@@ -35,6 +35,7 @@ class Trainer(object):
                                            batch_size=cfg.TRAIN["BATCH_SIZE"],
                                            num_workers=cfg.TRAIN["NUMBER_WORKERS"],
                                            shuffle=True)
+        print(cfg.MODEL)
         self.yolov3 = Yolov3().to(self.device)
         # self.yolov3.apply(tools.weights_init_normal)
 
@@ -45,7 +46,8 @@ class Trainer(object):
         self.criterion = YoloV3Loss(anchors=cfg.MODEL["ANCHORS"], strides=cfg.MODEL["STRIDES"],
                                     iou_threshold_loss=cfg.TRAIN["IOU_THRESHOLD_LOSS"])
 
-        self.__load_model_weights(weight_path, resume)
+        if cfg.MODEL["NAME"] != "EfficientNet":
+            self.__load_model_weights(weight_path, resume)
 
         self.scheduler = cosine_lr_scheduler.CosineDecayLR(self.optimizer,
                                                           T_max=self.epochs*len(self.train_dataloader),

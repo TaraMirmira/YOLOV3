@@ -16,14 +16,14 @@ import utils.data_augment as dataAug
 import utils.tools as tools
 
 from torchvision.datasets import CocoDetection
-from copy_paste import copy_paste_class
+from .copy_paste import copy_paste_class
 from pycocotools.coco import COCO
 import skimage.io as io
-from copy_paste import CopyPaste
-from visualize_copy_paste import display_instances
+from .copy_paste import CopyPaste
+from .visualize_copy_paste import display_instances
 import albumentations as A
 from matplotlib import pyplot as plt
-from visualize import visualize_boxes
+from .visualize import visualize_boxes
 
 min_keypoints_per_image = 10
 

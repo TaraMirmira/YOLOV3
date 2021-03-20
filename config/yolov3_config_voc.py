@@ -1,10 +1,10 @@
 # coding=utf-8
 # project
-DATA_PATH = "D:/DLProject/YOLOV3/data"
-PROJECT_PATH = "D:/DLProject/YOLOV3"
-TRAIN_IMAGE_PATH = "D:/DLProject/YOLOV3/data/VOCdevkit/VOC2007/JPEGImages"
-DO_COPY_PASTE = True
-VIS_COPY_PASTE = True
+DATA_PATH = "/home/milu/miniconda3"
+PROJECT_PATH = "/home/milu/miniconda3/YOLOV3"
+TRAIN_IMAGE_PATH = "/home/milu/miniconda3/VOCtrainval-2007/VOCdevkit/VOC2007/JPEGImages"
+DO_COPY_PASTE = False
+VIS_COPY_PASTE = False
 
 
 DATA = {"CLASSES":['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
@@ -19,7 +19,8 @@ MODEL = {"ANCHORS":[[(1.25, 1.625), (2.0, 3.75), (4.125, 2.875)],  # Anchors for
             [(3.625, 2.8125), (4.875, 6.1875), (11.65625, 10.1875)]] ,# Anchors for big obj
          "STRIDES":[8, 16, 32],
          "ANCHORS_PER_SCLAE":3,
-         "NECK_VERSION_V4":True
+         "NECK_VERSION_V4":False,
+         "BACKBONE":"EfficientNet"
          }
 
 # train

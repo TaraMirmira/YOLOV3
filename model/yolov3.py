@@ -11,9 +11,10 @@ import torch
 from model.backbones.darknet53 import Darknet53
 from model.necks.yolo_fpn import FPN_YOLOV3
 from model.necks.yolov4_neck import yolov4neck
+from model.backbones.efficient_net import EfficientNet
 from model.head.yolo_head import Yolo_head
 from model.layers.conv_module import Convolutional
-import config.yolov3_config_voc as cfg
+import config.EfficientNet_yolov3_false_false as cfg
 import numpy as np
 from utils.tools import *
 
@@ -31,9 +32,15 @@ class Yolov3(nn.Module):
         self.__out_channel = cfg.MODEL["ANCHORS_PER_SCLAE"] * (self.__nC + 5)
         self.__neck_v4 = cfg.MODEL["NECK_VERSION_V4"]
 
-        self.__backnone = Darknet53()
+        print(cfg.MODEL)
+        if cfg.MODEL["BACKBONE"] == "EfficientNet":
+            self.__backnone = EfficientNet.from_pretrained('efficientnet-b3')
+            self.__filters_in = [384, 136, 48]
+        else:
+            self.__backnone = Darknet53()
+            self.__filters_in = [1024, 512, 256]
         if not self.__neck_v4:
-           self.__fpn = FPN_YOLOV3(fileters_in=[1024, 512, 256],
+           self.__fpn = FPN_YOLOV3(fileters_in=self.__filters_in,
                                    fileters_out=[self.__out_channel, self.__out_channel, self.__out_channel])
         else:
            self.__fpn = yolov4neck(inference)
@@ -53,6 +60,7 @@ class Yolov3(nn.Module):
         out = []
 
         x_s, x_m, x_l = self.__backnone(x)
+        # print(x_s.shape, x_m.shape, x_l.shape)
         x_s, x_m, x_l = self.__fpn(x_l, x_m, x_s)
 
         out.append(self.__head_s(x_s))
