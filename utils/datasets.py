@@ -144,7 +144,7 @@ class VocDataset(Dataset):
         self.do_copy_paste = do_copy_paste
 
         if do_copy_paste:
-            image_path = "D:/DLProject/YOLOV3/data/VOCdevkit/VOC2007/JPEGImages"
+            image_path = cfg.TRAIN_IMAGE_PATH
             json_file = "instances_segmentation_det_trainval.json"
             transform = A.Compose([A.augmentations.transforms.Resize (self.img_size, self.img_size, interpolation=1, always_apply=True, p=1), CopyPaste(blend=True, sigma=1, pct_objects_paste=0.8, p=1.0, always_apply=True)], bbox_params=A.BboxParams(format="coco", min_visibility=0.05))
             self.copy_paste_data = CocoDetectionCP(image_path, json_file, transform)

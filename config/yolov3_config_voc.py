@@ -1,7 +1,8 @@
 # coding=utf-8
 # project
-DATA_PATH = "/home/tmirmira/YOLOV3/data/VOC"
-PROJECT_PATH = "/home/tmirmira/YOLOV3"
+DATA_PATH = "D:/DLProject/YOLOV3/data"
+PROJECT_PATH = "D:/DLProject/YOLOV3"
+TRAIN_IMAGE_PATH = "D:/DLProject/YOLOV3/data/VOCdevkit/VOC2007/JPEGImages"
 
 
 DATA = {"CLASSES":['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
