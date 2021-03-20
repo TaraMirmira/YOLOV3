@@ -30,7 +30,7 @@ class Trainer(object):
         self.epochs = cfg.TRAIN["EPOCHS"]
         self.weight_path = weight_path
         self.multi_scale_train = cfg.TRAIN["MULTI_SCALE_TRAIN"]
-        self.train_dataset = data.VocDataset(anno_file_type="train", img_size=cfg.TRAIN["TRAIN_IMG_SIZE"])
+        self.train_dataset = data.VocDataset(anno_file_type="train", img_size=cfg.TRAIN["TRAIN_IMG_SIZE"], do_copy_paste = cfg.DO_COPY_PASTE)
         self.train_dataloader = DataLoader(self.train_dataset,
                                            batch_size=cfg.TRAIN["BATCH_SIZE"],
                                            num_workers=cfg.TRAIN["NUMBER_WORKERS"],

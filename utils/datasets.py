@@ -167,8 +167,9 @@ class VocDataset(Dataset):
             #convert from xywh to xyxy
             bboxes_org[:, 2] += bboxes_org[:, 0]
             bboxes_org[:, 3] += bboxes_org[:, 1]
-            #plt.imshow(visualize_boxes(img_org, bboxes_org[:,:4].astype(int), bboxes_org[:,4].astype(int), bboxes_org[:,4], class_labels))
-            #plt.show()
+            if cfg.VIS_COPY_PASTE :
+                plt.imshow(visualize_boxes(img_org, bboxes_org[:,:4].astype(int), bboxes_org[:,4].astype(int), np.ones(bboxes_org.shape[0]), class_labels))
+                plt.show()
 
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
         
@@ -321,7 +322,7 @@ class VocDataset(Dataset):
 
 if __name__ == "__main__":
 
-    voc_dataset = VocDataset(anno_file_type="train", img_size=448, do_copy_paste=True)
+    voc_dataset = VocDataset(anno_file_type="train", img_size=448, do_copy_paste=cfg.DO_COPY_PASTE)
     dataloader = DataLoader(voc_dataset, shuffle=True, batch_size=1, num_workers=0)
 
     for i, (img, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes) in enumerate(dataloader):

@@ -3,6 +3,8 @@
 DATA_PATH = "D:/DLProject/YOLOV3/data"
 PROJECT_PATH = "D:/DLProject/YOLOV3"
 TRAIN_IMAGE_PATH = "D:/DLProject/YOLOV3/data/VOCdevkit/VOC2007/JPEGImages"
+DO_COPY_PASTE = True
+VIS_COPY_PASTE = True
 
 
 DATA = {"CLASSES":['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
