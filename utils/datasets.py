@@ -20,9 +20,10 @@ from copy_paste import copy_paste_class
 from pycocotools.coco import COCO
 import skimage.io as io
 from copy_paste import CopyPaste
-from visualize2 import display_instances
+from visualize_copy_paste import display_instances
 import albumentations as A
 from matplotlib import pyplot as plt
+from visualize import visualize_boxes
 
 min_keypoints_per_image = 10
 
@@ -127,6 +128,11 @@ class CocoDetectionCP(CocoDetection):
         return self.transforms(**output)
 
 
+class_labels = {'aeroplane' : 0, 'bicycle' : 1, 'bird' : 2, 'boat' : 3, 'bottle' : 4, 'bus' : 5,
+           'car' : 6, 'cat' : 7, 'chair' : 8, 'cow' : 9, 'diningtable' : 10, 'dog' : 11, 'horse' : 12,
+           'motorbike' : 13, 'person' : 14, 'pottedplant' : 15, 'sheep' : 16, 'sofa' : 17,
+           'train' : 18, 'tvmonitor' : 19}
+
 
 class VocDataset(Dataset):
     def __init__(self, anno_file_type, img_size=416, do_copy_paste = False):
@@ -155,12 +161,14 @@ class VocDataset(Dataset):
         if self.do_copy_paste:
             img_data = self.copy_paste_data[item]
             img_org = img_data['image']
-            plt.imshow(img_org)
-            plt.show()
+            #plt.imshow(img_org)
+            #plt.show()
             bboxes_org = np.array(img_data['bboxes'])[:, :5]
             #convert from xywh to xyxy
             bboxes_org[:, 2] += bboxes_org[:, 0]
             bboxes_org[:, 3] += bboxes_org[:, 1]
+            #plt.imshow(visualize_boxes(img_org, bboxes_org[:,:4].astype(int), bboxes_org[:,4].astype(int), bboxes_org[:,4], class_labels))
+            #plt.show()
 
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
         
