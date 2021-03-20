@@ -15,14 +15,136 @@ import random
 import utils.data_augment as dataAug
 import utils.tools as tools
 
+from torchvision.datasets import CocoDetection
+from copy_paste import copy_paste_class
+from pycocotools.coco import COCO
+import skimage.io as io
+from copy_paste import CopyPaste
+from visualize2 import display_instances
+import albumentations as A
+from matplotlib import pyplot as plt
+
+min_keypoints_per_image = 10
+
+def _count_visible_keypoints(anno):
+    return sum(sum(1 for v in ann["keypoints"][2::3] if v > 0) for ann in anno)
+
+def _has_only_empty_bbox(anno):
+    return all(any(o <= 1 for o in obj["bbox"][2:]) for obj in anno)
+
+def has_valid_annotation(anno):
+    # if it's empty, there is no annotation
+    if len(anno) == 0:
+        return False
+    # if all boxes have close to zero area, there is no annotation
+    if _has_only_empty_bbox(anno):
+        return False
+    # keypoints task have a slight different critera for considering
+    # if an annotation is valid
+    if "keypoints" not in anno[0]:
+        return True
+    # for keypoint detection tasks, only consider valid images those
+    # containing at least min_keypoints_per_image
+    if _count_visible_keypoints(anno) >= min_keypoints_per_image:
+        return True
+
+    return False
+
+def has_seg_annotation(anno):
+    if len(anno[0]['segmentation'][0]) == 8:
+        return False
+    return True
+
+
+@copy_paste_class
+class CocoDetectionCP(CocoDetection):
+    def __init__(
+        self,
+        root,
+        annFile,
+        transforms
+    ):
+        super(CocoDetectionCP, self).__init__(
+            root, annFile, None, None, transforms
+        )
+
+        # filter images without detection annotations
+        ids = []
+        for img_id in self.ids:
+            ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=None)
+            anno = self.coco.loadAnns(ann_ids)
+            if has_valid_annotation(anno):
+                ids.append(img_id)
+        self.ids = ids
+
+        # filter images with segmentation annotations
+        seg_ids = []
+        for img_id in self.ids:
+            ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=None)
+            anno = self.coco.loadAnns(ann_ids)
+            if has_seg_annotation(anno):
+                seg_ids.append(img_id)
+        self.seg_ids = seg_ids
+
+        # print the categories
+        #catIDs = self.coco.getCatIds()
+        #cats = self.coco.loadCats(catIDs)
+        #print(cats)
+
+    def load_example(self, index, from_seg = False):
+        img_id = None
+        if from_seg == True:
+            img_id = self.seg_ids[index]
+        else:
+            img_id = self.ids[index]
+
+        #debugging hardcode image id:
+        #img_id = self.seg_ids[163]
+
+        ann_ids = self.coco.getAnnIds(imgIds=img_id)
+        target = self.coco.loadAnns(ann_ids)
+
+        path = self.coco.loadImgs(img_id)[0]['file_name']
+        #print("file path: ", path)
+        image = cv2.imread(os.path.join(self.root, path))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        #convert all of the target segmentations to masks
+        #bboxes are expected to be (y1, x1, y2, x2, category_id)
+        masks = []
+        bboxes = []
+        for ix, obj in enumerate(target):
+            masks.append(self.coco.annToMask(obj))
+            bboxes.append(obj['bbox'] + [obj['category_id']] + [ix])
+
+        #pack outputs into a dict
+        output = {
+            'image': image,
+            'masks': masks,
+            'bboxes': bboxes
+        }
+        
+        return self.transforms(**output)
+
+
 
 class VocDataset(Dataset):
-    def __init__(self, anno_file_type, img_size=416):
+    def __init__(self, anno_file_type, img_size=416, do_copy_paste = False):
         self.img_size = img_size  # For Multi-training
         self.classes = cfg.DATA["CLASSES"]
         self.num_classes = len(self.classes)
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
         self.__annotations = self.__load_annotations(anno_file_type)
+        self.do_copy_paste = do_copy_paste
+
+        if do_copy_paste:
+            image_path = "D:/DLProject/YOLOV3/data/VOCdevkit/VOC2007/JPEGImages"
+            json_file = "instances_segmentation_det_trainval.json"
+            transform = A.Compose([A.augmentations.transforms.Resize (self.img_size, self.img_size, interpolation=1, always_apply=True, p=1), CopyPaste(blend=True, sigma=1, pct_objects_paste=0.8, p=1.0, always_apply=True)], bbox_params=A.BboxParams(format="coco", min_visibility=0.05))
+            self.copy_paste_data = CocoDetectionCP(image_path, json_file, transform)
+
+
+
 
     def __len__(self):
         return  len(self.__annotations)
@@ -30,6 +152,16 @@ class VocDataset(Dataset):
     def __getitem__(self, item):
 
         img_org, bboxes_org = self.__parse_annotation(self.__annotations[item])
+        if self.do_copy_paste:
+            img_data = self.copy_paste_data[item]
+            img_org = img_data['image']
+            plt.imshow(img_org)
+            plt.show()
+            bboxes_org = np.array(img_data['bboxes'])[:, :5]
+            #convert from xywh to xyxy
+            bboxes_org[:, 2] += bboxes_org[:, 0]
+            bboxes_org[:, 3] += bboxes_org[:, 1]
+
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
         
         item_mix = random.randint(0, len(self.__annotations)-1)
@@ -181,7 +313,7 @@ class VocDataset(Dataset):
 
 if __name__ == "__main__":
 
-    voc_dataset = VocDataset(anno_file_type="train", img_size=448)
+    voc_dataset = VocDataset(anno_file_type="train", img_size=448, do_copy_paste=True)
     dataloader = DataLoader(voc_dataset, shuffle=True, batch_size=1, num_workers=0)
 
     for i, (img, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes) in enumerate(dataloader):
