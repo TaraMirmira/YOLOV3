@@ -26,6 +26,7 @@ from matplotlib import pyplot as plt
 from .visualize import visualize_boxes
 
 min_keypoints_per_image = 10
+image_counter = 0
 
 def _count_visible_keypoints(anno):
     return sum(sum(1 for v in ann["keypoints"][2::3] if v > 0) for ann in anno)
@@ -158,8 +159,11 @@ class VocDataset(Dataset):
     def __getitem__(self, item):
 
         img_org, bboxes_org = self.__parse_annotation(self.__annotations[item])
+        H,W,_ = img_org.shape
         if self.do_copy_paste:
+            resize_transform = A.Compose([A.augmentations.transforms.Resize (H, W, interpolation=1, always_apply=True, p=1)], bbox_params=A.BboxParams(format="coco", min_visibility=0.05))
             img_data = self.copy_paste_data[item]
+            img_data = resize_transform(**img_data)
             img_org = img_data['image']
             #plt.imshow(img_org)
             #plt.show()
@@ -168,7 +172,10 @@ class VocDataset(Dataset):
             bboxes_org[:, 2] += bboxes_org[:, 0]
             bboxes_org[:, 3] += bboxes_org[:, 1]
             if cfg.VIS_COPY_PASTE :
+                global image_counter
+                image_counter +=1
                 plt.imshow(visualize_boxes(img_org, bboxes_org[:,:4].astype(int), bboxes_org[:,4].astype(int), np.ones(bboxes_org.shape[0]), class_labels))
+                plt.imsave('copy_paste_{}.png'.format(image_counter), visualize_boxes(img_org, bboxes_org[:,:4].astype(int), bboxes_org[:,4].astype(int), np.ones(bboxes_org.shape[0]), class_labels))
                 plt.show()
 
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
