@@ -124,16 +124,34 @@ def voc_eval(detpath,
     npos = 0
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
-        bbox = np.array([x['bbox'] for x in R])
-        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
-        det = [False] * len(R)
+        arr = []
+        count = 0
+        diff_arr = []
+        for x in R:
+            height = x['bbox'][3] - x['bbox'][1]
+            width = x['bbox'][2] - x['bbox'][0]
+            #if width * height < 1024:
+            #if width * height >= 1024 and width * height < 9216:
+            if width * height >= 9216:
+                count += 1
+                arr.append(x['bbox'])
+                diff_arr.append(x['difficult'])
+        bbox = np.array(arr)
+        difficult = np.array(diff_arr).astype(np.bool)
+        #bbox = np.array([x['bbox'] for x in R])
+        #difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
+        #det = [False] * len(R)
+        det = [False] * count
         npos = npos + sum(~difficult)
-        class_recs[imagename] = {'bbox': bbox,
+        if count > 0:
+            class_recs[imagename] = {'bbox': bbox,
                                  'difficult': difficult,
                                  'det': det}
 
     # read dets
     detfile = detpath.format(classname)
+    if not os.path.isfile(detfile):
+        return 0, 0, 0
     with open(detfile, 'r') as f:
         lines = f.readlines()
 
@@ -153,7 +171,10 @@ def voc_eval(detpath,
     tp = np.zeros(nd)
     fp = np.zeros(nd)
     for d in range(nd):
-        R = class_recs[image_ids[d]]
+        try:
+            R = class_recs[image_ids[d]]
+        except KeyError:
+            continue
         bb = BB[d, :].astype(float)
         ovmax = -np.inf
         BBGT = R['bbox'].astype(float)

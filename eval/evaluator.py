@@ -54,7 +54,9 @@ class Evaluator(object):
 
                 self.__visual_imgs += 1
 
+            #counting = 0
             for bbox in bboxes_prd:
+                #counting += 1
                 coor = np.array(bbox[:4], dtype=np.int32)
                 score = bbox[4]
                 class_ind = int(bbox[5])
@@ -66,6 +68,7 @@ class Evaluator(object):
 
                 with open(os.path.join(self.pred_result_path, 'comp4_det_test_' + class_name + '.txt'), 'a') as f:
                     f.write(s)
+            #print("COUTNING is: ", counting)
 
         return self.__calc_APs()
 

@@ -23,7 +23,7 @@ class Yolov3(nn.Module):
     """
     Note ： int the __init__(), to define the modules should be in order, because of the weight file is order
     """
-    def __init__(self, init_weights=True, inference=False):
+    def __init__(self, init_weights=True, in_channels=1024, inference=False):
         super(Yolov3, self).__init__()
 
         self.__anchors = torch.FloatTensor(cfg.MODEL["ANCHORS"])
@@ -43,7 +43,7 @@ class Yolov3(nn.Module):
            self.__fpn = FPN_YOLOV3(fileters_in=self.__filters_in,
                                    fileters_out=[self.__out_channel, self.__out_channel, self.__out_channel])
         else:
-           self.__fpn = yolov4neck(inference)
+           self.__fpn = yolov4neck(in_channels, inference)
 
         # small
         self.__head_s = Yolo_head(nC=self.__nC, anchors=self.__anchors[0], stride=self.__strides[0])

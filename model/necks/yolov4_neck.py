@@ -241,11 +241,11 @@ class DownSample5(nn.Module):
 
 
 class yolov4neck(nn.Module):
-    def __init__(self, inference=False):
+    def __init__(self, in_channels=1024, inference=False):
         super().__init__()
         self.inference = inference
 
-        self.conv1 = Conv_Bn_Activation(1024, 512, 1, 1, 'leaky')
+        self.conv1 = Conv_Bn_Activation(in_channels, 512, 1, 1, 'leaky')
         self.conv2 = Conv_Bn_Activation(512, 1024, 3, 1, 'leaky')
         self.conv3 = Conv_Bn_Activation(1024, 512, 1, 1, 'leaky')
         # SPP

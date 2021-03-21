@@ -83,6 +83,7 @@ class Tester(object):
                 for i in APs:
                     print("{} --> mAP : {}".format(i, APs[i]))
                     mAP += APs[i]
+                print('total mAP:%g' % (mAP))
                 mAP = mAP / self.__num_class
                 print('mAP:%g' % (mAP))
 
